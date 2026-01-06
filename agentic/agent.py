@@ -1,6 +1,6 @@
 """Agent implementation using LangGraph with explicit state and control loop."""
 from typing import TypedDict, Literal, Annotated
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
@@ -36,15 +36,40 @@ class AgentState(TypedDict):
     max_steps: int
 
 
+def create_llm() -> BaseChatModel:
+    """Create and return the appropriate LLM based on configuration."""
+    llm_type = Config.LLM_TYPE
+    model_name = Config.get_model_name()
+    
+    if llm_type == "gpt" or llm_type == "openai":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=model_name,
+            api_key=Config.OPENAI_API_KEY,
+            temperature=0,
+        )
+    elif llm_type == "gemini":
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            return ChatGoogleGenerativeAI(
+                model=model_name,
+                google_api_key=Config.GOOGLE_API_KEY,
+                temperature=0,
+            )
+        except ImportError:
+            raise ImportError(
+                "langchain-google-genai package is required for Gemini. "
+                "Install it with: pip install langchain-google-genai"
+            )
+    else:
+        raise ValueError(f"Unsupported LLM_TYPE: {llm_type}")
+
+
 def create_agent():
     """Create and return a configured LangGraph agent."""
     
     # Initialize LLM with tools
-    llm = ChatOpenAI(
-        model=Config.MODEL,
-        api_key=Config.OPENAI_API_KEY,
-        temperature=0,
-    )
+    llm = create_llm()
     llm_with_tools = llm.bind_tools(TOOLS)
     
     # Create the graph

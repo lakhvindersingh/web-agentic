@@ -57,20 +57,26 @@ A minimal, production-ready agent built with LangGraph and GPT that demonstrates
 
 3. **Configure environment:**
    
-   Create a `.env` file in the project root:
-   ```bash
-   # Windows
-   echo OPENAI_API_KEY=your-api-key-here > .env
-   echo MODEL=gpt-4o-mini >> .env
-   
-   # Linux/Mac
-   cat > .env << EOF
-   OPENAI_API_KEY=your-api-key-here
-   MODEL=gpt-4o-mini
-   EOF
+   Create a `.env` file in the project root. Use PowerShell (recommended for Windows):
+   ```powershell
+   [System.IO.File]::WriteAllText(".env", "LLM_TYPE=gpt`r`nOPENAI_API_KEY=your-api-key-here`r`nMODEL=gpt-4o-mini`r`n", [System.Text.Encoding]::UTF8)
    ```
    
-   Replace `your-api-key-here` with your actual OpenAI API key.
+   Or manually create `.env` with:
+   ```
+   LLM_TYPE=gpt
+   OPENAI_API_KEY=your-openai-api-key-here
+   MODEL=gpt-4o-mini
+   ```
+   
+   For Gemini, use:
+   ```
+   LLM_TYPE=gemini
+   GOOGLE_API_KEY=your-google-api-key-here
+   MODEL=gemini-pro
+   ```
+   
+   Replace the API keys with your actual keys.
 
 4. **Run the agent:**
    ```bash
@@ -129,8 +135,28 @@ The agent stops when:
 
 All configuration is loaded from environment variables:
 
-- `OPENAI_API_KEY` (required): Your OpenAI API key
-- `MODEL` (optional): Model to use (default: `gpt-4o-mini`)
+- `LLM_TYPE` (optional): LLM provider to use - `gpt`, `openai`, or `gemini` (default: `gpt`)
+- `OPENAI_API_KEY` (required for GPT/OpenAI): Your OpenAI API key
+- `GOOGLE_API_KEY` (required for Gemini): Your Google API key
+- `MODEL` (optional): Specific model to use. Defaults based on LLM_TYPE:
+  - GPT/OpenAI: `gpt-4o-mini`
+  - Gemini: `gemini-pro`
+
+### Example .env configurations:
+
+**For OpenAI/GPT:**
+```
+LLM_TYPE=gpt
+OPENAI_API_KEY=sk-your-openai-key-here
+MODEL=gpt-4o-mini
+```
+
+**For Google Gemini:**
+```
+LLM_TYPE=gemini
+GOOGLE_API_KEY=your-google-api-key-here
+MODEL=gemini-pro
+```
 
 ## Extending the Agent
 
