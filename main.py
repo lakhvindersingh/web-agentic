@@ -22,6 +22,9 @@ def main():
     print("Agent is ready. Type your questions or 'quit' to exit.")
     print("-" * 60)
     
+    # Maintain conversation history
+    conversation_history = []
+    
     while True:
         try:
             user_input = input("\nYou: ").strip()
@@ -34,7 +37,12 @@ def main():
                 continue
             
             print("\nAgent: ", end="", flush=True)
-            response = run_agent(agent, user_input, max_steps=10)
+            response, conversation_history = run_agent(
+                agent, 
+                user_input, 
+                previous_messages=conversation_history,
+                max_steps=10
+            )
             print(response)
             
         except KeyboardInterrupt:

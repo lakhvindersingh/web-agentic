@@ -144,20 +144,27 @@ def create_agent():
     return app
 
 
-def run_agent(agent, user_input: str, max_steps: int = 10) -> str:
+def run_agent(agent, user_input: str, previous_messages: list = None, max_steps: int = 10) -> tuple[str, list]:
     """
-    Run the agent with user input and return the final response.
+    Run the agent with user input and return the final response and updated conversation.
     
     Args:
         agent: The compiled LangGraph agent
         user_input: User's query or request
+        previous_messages: Previous conversation messages for context
         max_steps: Maximum number of tool-calling steps
         
     Returns:
-        The agent's final response as a string
+        Tuple of (response_string, updated_messages_list)
     """
+    # Start with previous messages or empty list
+    messages = list(previous_messages) if previous_messages else []
+    
+    # Add the new user message
+    messages.append(HumanMessage(content=user_input))
+    
     initial_state = {
-        "messages": [HumanMessage(content=user_input)],
+        "messages": messages,
         "step_count": 0,
         "max_steps": max_steps,
     }
@@ -166,17 +173,16 @@ def run_agent(agent, user_input: str, max_steps: int = 10) -> str:
     final_state = agent.invoke(initial_state)
     
     # Extract the final AI message (last AIMessage without tool calls)
-    messages = final_state["messages"]
-    for message in reversed(messages):
+    updated_messages = final_state["messages"]
+    response = "No response generated."
+    
+    for message in reversed(updated_messages):
         if isinstance(message, AIMessage):
             # Return the first AI message that has content and no pending tool calls
             if message.content:
-                return message.content
+                response = message.content
+                break
     
-    # Fallback: if no content message found, check for any AI message
-    for message in reversed(messages):
-        if isinstance(message, AIMessage):
-            return message.content if message.content else "No response content."
-    
-    return "No response generated."
+    # Return both the response and the full conversation history
+    return response, updated_messages
 
