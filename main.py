@@ -1,6 +1,7 @@
 """Main entry point for the agent."""
 import sys
-from agentic import Config, create_agent, run_agent
+from config import Config
+from core import create_agent, run_agent
 
 
 def main():

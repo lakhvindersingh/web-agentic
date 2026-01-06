@@ -3,4 +3,7 @@ langchain-openai>=0.1.0
 langchain-google-genai>=2.0.0
 langgraph>=0.2.0
 python-dotenv>=1.0.0
+httpx>=0.24.0
+# MCP (Model Context Protocol) - Optional, only needed if using MCP features
+# Install with: pip install mcp
 

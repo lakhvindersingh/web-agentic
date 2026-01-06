@@ -19,20 +19,38 @@ A minimal, production-ready agent built with LangGraph and GPT that demonstrates
   - `read_file(filepath)`: File reading capability
 - **Deterministic Stopping**: END state with max steps protection
 - **Environment-Based Configuration**: All settings loaded from environment variables
+- **MCP Support**: Model Context Protocol integration for external tool connectivity
+- **Modular Architecture**: Clean separation of concerns with organized modules
 
 ## Project Structure
 
 ```
 .
-├── agentic/         # Main package
-│   ├── __init__.py  # Package initialization
-│   ├── agent.py     # LangGraph agent implementation
-│   ├── config.py    # Configuration loading
-│   └── tools.py     # Tool definitions
-├── main.py          # Entry point with interactive loop
-├── requirements.txt # Python dependencies
-├── .gitignore       # Git ignore rules
-└── README.md        # This file
+├── core/                 # Core agent logic
+│   ├── __init__.py
+│   ├── state.py          # Agent state definition
+│   └── graph.py          # LangGraph implementation
+├── llm/                  # LLM provider implementations
+│   ├── __init__.py
+│   └── factory.py        # LLM factory for multiple providers
+├── tools/                # Tool definitions
+│   ├── __init__.py
+│   ├── builtin.py        # Built-in tools
+│   └── registry.py       # Tool registry (built-in + MCP)
+├── mcp/                  # MCP (Model Context Protocol) integration
+│   ├── __init__.py
+│   ├── client.py         # MCP client for connecting to servers
+│   └── server.py         # MCP server for exposing tools
+├── config/               # Configuration management
+│   ├── __init__.py
+│   └── settings.py       # Environment-based configuration
+├── prompts/              # System prompts
+│   ├── __init__.py
+│   └── system.py         # System prompt definitions
+├── main.py               # Entry point with interactive loop
+├── requirements.txt      # Python dependencies
+├── .gitignore           # Git ignore rules
+└── README.md            # This file
 ```
 
 ## Setup
@@ -141,6 +159,8 @@ All configuration is loaded from environment variables:
 - `MODEL` (optional): Specific model to use. Defaults based on LLM_TYPE:
   - GPT/OpenAI: `gpt-4o-mini`
   - Gemini: `gemini-pro`
+- `MCP_ENABLED` (optional): Enable MCP integration - `true` or `false` (default: `false`)
+- `MCP_SERVER_URL` (optional): URL of MCP server when MCP is enabled (default: `http://localhost:8000`)
 
 ### Example .env configurations:
 
@@ -158,11 +178,21 @@ GOOGLE_API_KEY=your-google-api-key-here
 MODEL=gemini-pro
 ```
 
+**With MCP enabled:**
+```
+LLM_TYPE=gpt
+OPENAI_API_KEY=sk-your-openai-key-here
+MODEL=gpt-4o-mini
+MCP_ENABLED=true
+MCP_SERVER_URL=http://localhost:8000
+```
+
 ## Extending the Agent
 
 ### Adding New Tools
 
-1. Define the tool in `agentic/tools.py`:
+**Built-in Tools:**
+1. Define the tool in `tools/builtin.py`:
    ```python
    @tool
    def my_tool(param: str) -> str:
@@ -171,14 +201,34 @@ MODEL=gemini-pro
        return result
    ```
 
-2. Add to `TOOLS` list in `agentic/tools.py`:
+2. Add to `get_builtin_tools()` function in `tools/builtin.py`:
    ```python
-   TOOLS = [search, calculate, read_file, my_tool]
+   def get_builtin_tools():
+       return [search, calculate, read_file, my_tool]
    ```
+
+**MCP Tools:**
+MCP (Model Context Protocol) allows connecting to external tool servers. The tools registry (`tools/registry.py`) automatically includes MCP tools when `MCP_ENABLED=true`. To add MCP support:
+1. Set `MCP_ENABLED=true` in your `.env` file
+2. Configure your MCP server URL
+3. Tools from the MCP server will be automatically available
 
 ### Modifying the Control Loop
 
-Edit the `should_continue` function in `agentic/agent.py` to change decision logic.
+Edit the `should_continue` function in `core/graph.py` to change decision logic.
+
+### MCP Integration
+
+The project includes MCP (Model Context Protocol) support for connecting to external tool servers:
+- **MCP Client**: Connect to MCP servers to fetch external tools (`mcp/client.py`)
+- **MCP Server**: Expose your tools via MCP protocol (`mcp/server.py`)
+- **Tool Registry**: Automatically integrates MCP tools when enabled (`tools/registry.py`)
+
+To use MCP:
+1. Install MCP package: `pip install mcp`
+2. Set `MCP_ENABLED=true` in `.env`
+3. Configure your MCP server URL
+4. Tools from the MCP server will be automatically available to the agent
 
 ## Production Considerations
 
